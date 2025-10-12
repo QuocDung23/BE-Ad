@@ -1,31 +1,25 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { ResponseStatus, ServiceResponse } from "@/common";
-import express, { Request, Response, Router } from "express";
-import { StatusCodes } from "http-status-codes";
-import { z } from "zod";
-import { createApiResponse } from "../../swagger/openAPIResponseBuilders";
+import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
+import express, { Router } from 'express';
+import z from 'zod';
+
+import { HealthCheckController } from './healthCheck.controller';
+
+import { autoBindUtil } from '@/common';
+import { createApiResponse } from '@/swagger/openAPIResponseBuilders';
 
 export const healthCheckRegistry = new OpenAPIRegistry();
 
-export const healthCheckRouter: Router = (() => {
-  const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-  healthCheckRegistry.registerPath({
-    method: "get",
-    path: "/health-check",
-    tags: ["Health Check"],
-    responses: createApiResponse(z.null(), "Success"),
-  });
+const healthCheckController = new HealthCheckController();
+autoBindUtil(healthCheckController);
 
-  router.get("/", (_req: Request, res: Response) => {
-    const serviceResponse = new ServiceResponse(
-      ResponseStatus.Success,
-      "Service is healthy",
-      null,
-      StatusCodes.OK
-    );
-    res.status(StatusCodes.OK).json(serviceResponse);
-  });
+healthCheckRegistry.registerPath({
+	method: 'get',
+	path: '/health-check',
+	tags: ['Health Check'],
+	responses: createApiResponse(z.null(), 'Success'),
+});
+router.get('/', healthCheckController.start);
 
-  return router;
-})();
+export const healthCheckRouter: Router = router;
