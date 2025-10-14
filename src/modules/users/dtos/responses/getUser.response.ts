@@ -3,7 +3,7 @@ import z from 'zod';
 
 import { users } from '@/models';
 
-export class GetUsersResponseDto {
+export class GetUserResponseDto {
 	id: string;
 	email: string;
 	name: string;
@@ -23,7 +23,7 @@ export class GetUsersResponseDto {
 	}
 }
 
-export const getUsersResponseDtoSchema = z.object({
+export const getUserResponseDtoSchema = z.object({
 	id: z.uuid(),
 	email: z.email(),
 	name: z.string(),

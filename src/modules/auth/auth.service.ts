@@ -157,10 +157,10 @@ export class AuthService {
 	}
 
 	async refreshToken(
-		userInformation: UserInformationDto,
+		myInformation: UserInformationDto,
 	): Promise<HttpResponseBodySuccessDto<LoginResponseDto> | Exception> {
 		const { accessToken, refreshToken } = await signJWT({
-			userId: userInformation.id,
+			userId: myInformation.id,
 		});
 
 		await this.authRepository.createToken({
@@ -168,7 +168,7 @@ export class AuthService {
 				refreshToken: refreshToken,
 				user: {
 					connect: {
-						id: userInformation.id,
+						id: myInformation.id,
 					},
 				},
 			},
@@ -221,7 +221,7 @@ export class AuthService {
 		const { email, otp } = verifyRequestDto;
 		const account = await this.authRepository.findAccount({
 			email: email,
-			accountStatus: UserStatusEnum.ACTIVE,
+			userStatus: UserStatusEnum.ACTIVE,
 		});
 		if (!account || !account.user) {
 			throw new NotFoundException('account');

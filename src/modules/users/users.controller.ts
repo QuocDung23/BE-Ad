@@ -1,7 +1,15 @@
 import { Exception } from '@tsed/exceptions';
 import { Request, Response } from 'express';
 
-import { GetUsersRequestDto, GetUsersResponseDto } from './dtos';
+import {
+	GetUserByUserIdRequestDto,
+	GetUserResponseDto,
+	GetUsersRequestDto,
+	GetUsersResponseDto,
+	UpdateMyInformationRequestDto,
+	UpdateMyPasswordRequestDto,
+	UserInformationDto,
+} from './dtos';
 import { UsersService } from './users.service';
 
 import { HttpResponseDto, PaginationDto } from '@/common';
@@ -17,6 +25,58 @@ export class UsersController {
 		if (result instanceof Exception) {
 			return new HttpResponseDto().exception(result);
 		}
-		return new HttpResponseDto().created<GetUsersResponseDto[]>(result);
+		return new HttpResponseDto().success<GetUsersResponseDto[]>(result);
+	}
+
+	async getUserByUserId(req: Request): Promise<Response> {
+		const { userId } = req.params;
+
+		const getUserByUserIdRequestDto = new GetUserByUserIdRequestDto(
+			userId,
+			req.query,
+		);
+
+		const result = await this.usersService.getUserByUserId(getUserByUserIdRequestDto);
+		if (result instanceof Exception) {
+			return new HttpResponseDto().exception(result);
+		}
+		return new HttpResponseDto().success<GetUserResponseDto>(result);
+	}
+
+	async getMyInformation(req: Request): Promise<Response> {
+		const myInformationDto = req.user as UserInformationDto;
+		const result = await this.usersService.getMyInformation(myInformationDto);
+		if (result instanceof Exception) {
+			return new HttpResponseDto().exception(result);
+		}
+		return new HttpResponseDto().success<GetUserResponseDto>(result);
+	}
+
+	async updateMyInformation(req: Request): Promise<Response> {
+		const updateMyInformationRequestDto = new UpdateMyInformationRequestDto(
+			req.query,
+		);
+		const myInformationDto = req.user as UserInformationDto;
+		const result = await this.usersService.updateMyInformation(
+			updateMyInformationRequestDto,
+			myInformationDto,
+		);
+		if (result instanceof Exception) {
+			return new HttpResponseDto().exception(result);
+		}
+		return new HttpResponseDto().success<GetUserResponseDto>(result);
+	}
+
+	async updateMyPassword(req: Request): Promise<Response> {
+		const updateMyPasswordRequestDto = new UpdateMyPasswordRequestDto(req.body);
+		const myInformationDto = req.user as UserInformationDto;
+		const result = await this.usersService.updateMyPassword(
+			updateMyPasswordRequestDto,
+			myInformationDto,
+		);
+		if (result instanceof Exception) {
+			return new HttpResponseDto().exception(result);
+		}
+		return new HttpResponseDto().success<GetUserResponseDto>(result);
 	}
 }

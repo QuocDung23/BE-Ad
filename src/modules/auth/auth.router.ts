@@ -90,7 +90,7 @@ authRegistry.registerPath({
 	method: 'post',
 	path: '/auth/refresh-token',
 	tags: ['Auth'],
-	responses: createApiResponse(loginResponseDtoSchema, 'Success'),
+	responses: createApiResponse(loginResponseDtoSchema, 'Success', StatusCodes.CREATED),
 });
 router.post(
 	'/refresh-token',

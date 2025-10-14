@@ -11,20 +11,26 @@ export class AuthRepository {
 	constructor(private readonly prismaService = new PrismaService()) {}
 
 	async findAccount({
+		accountId,
+		userId,
 		email,
-		accountStatus,
+		userStatus,
 	}: {
+		accountId?: string;
+		userId?: string;
 		email: string;
-		accountStatus?: UserStatusEnum;
+		userStatus?: UserStatusEnum;
 	}): Promise<accountsWithPartialRelations | null> {
 		return this.prismaService.accounts.findFirst({
 			include: {
 				user: true,
 			},
 			where: {
+				id: accountId,
 				user: {
+					id: userId,
 					email: email,
-					status: accountStatus,
+					status: userStatus,
 				},
 			},
 		});

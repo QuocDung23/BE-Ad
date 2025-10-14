@@ -93,8 +93,8 @@ export class AuthController {
 	};
 
 	async refreshToken(req: Request): Promise<Response> {
-		const userInformation = req.user as UserInformationDto;
-		const result = await this.authService.refreshToken(userInformation);
+		const myInformation = req.user as UserInformationDto;
+		const result = await this.authService.refreshToken(myInformation);
 		if (result instanceof Exception) {
 			return new HttpResponseDto().exception(result);
 		}
