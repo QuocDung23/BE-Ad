@@ -29,10 +29,15 @@ class AuthMiddleware extends BaseAutoBindMiddleware {
 		next: NextFunction,
 	): Promise<void | Exception> {
 		const cookies = req.headers.cookie;
-		const accessToken = cookies
+		const cookieToken = cookies
 			?.split('; ')
 			.find((row) => row.startsWith('accessToken='))
 			?.split('=')[1];
+		const authHeader = req.headers.authorization;
+		const bearerToken = authHeader?.startsWith('Bearer ')
+			? authHeader.split(' ')[1]
+			: undefined;
+		const accessToken = cookieToken ?? bearerToken;
 		let user: UserInformationDto;
 
 		if (!accessToken) {

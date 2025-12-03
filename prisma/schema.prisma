@@ -37,6 +37,14 @@ enum UserStatusEnum {
     ACTIVE @map("active")
     LOCKED @map("locked")
 }
+enum RoleStatusEnum {
+  ACTIVE @map("active")
+  LOCKED @map("locked")
+}
+enum ProjectStatusEnum {
+    ACTIVE @map("active")
+    LOCKED @map("locker")
+}
 
 model users {
     id        String         @id @default(uuid())
@@ -61,8 +69,10 @@ model users {
     socialAccounts socialAccounts?
     tokens         tokens[]
     otps           otps?
+    projectMembers projectMembers[]
 
     @@map("users")
+    userRoles userRole[]
 }
 
 model accounts {
@@ -104,3 +114,89 @@ model otps {
 
     @@map("Otps")
 }
+
+model roles {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  status      RoleStatusEnum @default(ACTIVE)
+  description String?
+  createAt    DateTime       @default(now())
+  updateAt    DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  projectMembers projectMembers[]
+
+  userRoles userRole[]
+}
+
+model permission {
+  id String @id @default(uuid())
+  namePer String @unique
+  desc String
+
+  rolePermission RolePermission[]
+}
+
+model RolePermission {
+  id String @id @default(uuid())
+  roleId String @map("role_id")
+  permissionId String @map("permission_id")
+  permission permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@map("RolePermissions")
+}
+
+model userRole {
+  id String @id @default(uuid())
+  userId String @map("user_id")
+  user users @relation(fields: [userId], references: [id])
+  roleId String @map("role_id")
+  role roles @relation(fields: [roleId], references: [id])
+  isGlobal Boolean @default(true)
+
+  @@unique([userId, roleId])
+  @@map("UserRoles")
+}
+
+model projects {
+  id          String            @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deleteAt    DateTime?
+  status      ProjectStatusEnum @default(ACTIVE)
+
+  lables        lable[]
+  projectMembers projectMembers[]
+
+  @@map("Projects")
+}
+
+model projectMembers {
+  id        String   @id @default(uuid())
+  roleId    String   @map("role_id")
+  role      roles    @relation(fields: [roleId], references: [id])
+  userId    String   @map("user_id")
+  user      users    @relation(fields: [userId], references: [id])
+  projectId String   @map("project_id")
+  project   projects @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, projectId])
+  @@map("ProjectMembers")
+}
+
+model lable {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  project     projects @relation(fields: [projectId], references: [id])
+  projectName String?
+  color       String?
+  name        String?
+
+  @@map("Lable")
+}
+

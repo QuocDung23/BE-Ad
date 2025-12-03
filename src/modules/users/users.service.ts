@@ -42,8 +42,8 @@ export class UsersService {
 		const [users, totalUsers] = await this.usersRepository.findUsers({
 			name: name,
 			status: status,
-			skip: 1,
-			take: 10,
+			skip: paginationUtils.skip,
+			take: paginationUtils.take,
 		});
 
 		const userResponse = users.map((user) => new GetUsersResponseDto(user));
@@ -76,10 +76,13 @@ export class UsersService {
 
 	async getMyInformation(
 		myInformationDto: UserInformationDto,
-	): Promise<HttpResponseBodySuccessDto<GetUserResponseDto>> {
+	): Promise<HttpResponseBodySuccessDto<GetUserResponseDto & { email: string }>> {
 		return {
 			success: true,
-			data: new GetUserResponseDto(myInformationDto),
+			data: {
+				...new GetUserResponseDto(myInformationDto),
+				email: myInformationDto.email, // thêm email vào response
+			},
 		};
 	}
 

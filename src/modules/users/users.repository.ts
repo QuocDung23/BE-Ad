@@ -18,20 +18,24 @@ export class UsersRepository {
 		skip: number;
 		take: number;
 	}): Promise<[users[], number]> {
+		const where: Prisma.usersWhereInput = {
+			status: status,
+			name: name
+				? {
+					contains: name,
+					mode: 'insensitive',
+				}
+				: undefined,
+		};
+
 		return Promise.all([
 			this.prismaService.users.findMany({
-				where: {
-					name: name,
-					status: status,
-				},
+				where,
 				skip: skip,
 				take: take,
 			}),
 			this.prismaService.users.count({
-				where: {
-					name: name,
-					status: status,
-				},
+				where,
 			}),
 		]);
 	}

@@ -30,13 +30,20 @@ app.use(setCookieMiddleware);
 app.use(passport.initialize());
 
 // Middlewares
-app.use(cors({ origin: appEnv.CORS_ORIGIN, credentials: true }));
+// Allow multiple origins: configured origin + common Vite dev hosts
+app.use(
+    cors({
+        origin: [appEnv.CORS_ORIGIN, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+        credentials: true,
+    }),
+);
 app.use(helmet());
 app.use(morgan('combined'));
 
 app.use('/health-check', Modules.healthCheckRouter);
 app.use('/auth', Modules.authRouter);
 app.use('/users', Modules.usersRouter);
+app.use('/projects', Modules.projectsRouter);
 
 app.use(errorHandlerMiddleware);
 

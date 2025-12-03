@@ -35,16 +35,35 @@ export class AuthController {
 		return new HttpResponseDto().created<AccountResponseDto>(result);
 	}
 
-	async login(req: Request): Promise<Response> {
+	async login(req: Request, res: Response): Promise<Response> {
 		const loginDto = req.body as LoginRequestDto;
 		const result = await this.authService.login(loginDto);
 		if (result instanceof Exception) {
-			return new HttpResponseDto().exception(result);
+			return res.status(result.status || 500).json({
+				success: false,
+				message: result.message,
+			});
 		}
-		return new HttpResponseDto().success<LoginResponseDto>(result);
+		const { accessToken, refreshToken } = result.data;
+		res.cookie('accessToken', accessToken, {
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: false,
+		});
+		// res.cookie('refreshToken', refreshToken, {
+		// 	httpOnly: true,
+		// 	sameSite: 'strict',
+		// 	secure: false,
+		// });
+		return res.status(200).json({
+			success: true,
+			data: {
+				accessToken,
+				refreshToken
+			},
+		});
 	}
 
-	// Redirect to Google OAuth
 	async googleAuth(): Promise<void> {
 		passport.authenticate('google', {
 			scope: ['profile', 'email'],

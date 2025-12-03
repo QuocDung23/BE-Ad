@@ -42,6 +42,18 @@ router.get(
 
 usersRegistry.registerPath({
 	method: 'get',
+	path: '/users/me',
+	tags: ['Users'],
+	responses: createApiResponse(getUserResponseDtoSchema, 'Success', StatusCodes.OK),
+});
+router.get(
+	'/me',
+	authMiddleware.verifyAccessToken,
+	usersController.getMyInformation,
+);
+
+usersRegistry.registerPath({
+	method: 'get',
 	path: '/users/{userId}',
 	tags: ['Users'],
 	request: getUserByUserIdRequestSchema,
@@ -49,44 +61,32 @@ usersRegistry.registerPath({
 });
 router.get('/:userId', authMiddleware.verifyAccessToken, usersController.getUserByUserId);
 
-usersRegistry.registerPath({
-	method: 'get',
-	path: '/users/me',
-	tags: ['Users'],
-	responses: createApiResponse(getUserResponseDtoSchema, 'Success', StatusCodes.OK),
-});
-router.get(
-	'/users/me',
-	authMiddleware.verifyAccessToken,
-	usersController.getMyInformation,
-);
+// usersRegistry.registerPath({
+// 	method: 'put',
+// 	path: '/users/me',
+// 	tags: ['Users'],
+// 	request: updateMyInformationRequestSchema,
+// 	responses: createApiResponse(getUserResponseDtoSchema, 'Success', StatusCodes.OK),
+// });
+// router.put(
+// 	'/users/me',
+// 	authMiddleware.verifyAccessToken,
+// 	validateRequestMiddleware(updateMyInformationRequestValidationSchema),
+// 	usersController.updateMyInformation,
+// );
 
-usersRegistry.registerPath({
-	method: 'put',
-	path: '/users/me',
-	tags: ['Users'],
-	request: updateMyInformationRequestSchema,
-	responses: createApiResponse(getUserResponseDtoSchema, 'Success', StatusCodes.OK),
-});
-router.put(
-	'/users/me',
-	authMiddleware.verifyAccessToken,
-	validateRequestMiddleware(updateMyInformationRequestValidationSchema),
-	usersController.updateMyInformation,
-);
-
-usersRegistry.registerPath({
-	method: 'patch',
-	path: '/users/me/change-password',
-	tags: ['Users'],
-	request: updateMyPasswordRequestSchema,
-	responses: createApiResponse(getUserResponseDtoSchema, 'Success', StatusCodes.OK),
-});
-router.patch(
-	'/users/me/change-password',
-	authMiddleware.verifyAccessToken,
-	validateRequestMiddleware(updateMyPasswordRequestValidationSchema),
-	usersController.updateMyPassword,
-);
+// usersRegistry.registerPath({
+// 	method: 'patch',
+// 	path: '/users/me/change-password',
+// 	tags: ['Users'],
+// 	request: updateMyPasswordRequestSchema,
+// 	responses: createApiResponse(getUserResponseDtoSchema, 'Success', StatusCodes.OK),
+// });
+// router.patch(
+// 	'/users/me/change-password',
+// 	authMiddleware.verifyAccessToken,
+// 	validateRequestMiddleware(updateMyPasswordRequestValidationSchema),
+// 	usersController.updateMyPassword,
+// );
 
 export const usersRouter = router;

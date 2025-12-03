@@ -65,6 +65,7 @@ export class AuthService {
 		};
 
 		const newAccount = await this.authRepository.createAccount({ accounts: account });
+		await this.otpsService.generateOtp({ userId: newAccount.userId });
 
 		return {
 			success: true,
@@ -118,7 +119,6 @@ export class AuthService {
 			},
 			cookies: {
 				accessToken: accessToken,
-				refreshToken: refreshToken,
 			},
 		};
 	}
@@ -151,7 +151,6 @@ export class AuthService {
 			},
 			cookies: {
 				accessToken: accessToken,
-				refreshToken: refreshToken,
 			},
 		};
 	}
@@ -182,7 +181,6 @@ export class AuthService {
 			},
 			cookies: {
 				accessToken: accessToken,
-				refreshToken: refreshToken,
 			},
 		};
 	}
@@ -217,46 +215,48 @@ export class AuthService {
 
 	async verify(
 		verifyRequestDto: VerifyRequestDto,
-	): Promise<HttpResponseBodySuccessDto<AccountResponseDto> | Exception> {
+	  ): Promise<HttpResponseBodySuccessDto<AccountResponseDto> | Exception> {
 		const { email, otp } = verifyRequestDto;
 		const account = await this.authRepository.findAccount({
-			email: email,
-			userStatus: UserStatusEnum.ACTIVE,
+		  email: email,
+		  userStatus: UserStatusEnum.ACTIVE,
 		});
 		if (!account || !account.user) {
-			throw new NotFoundException('account');
+		  throw new NotFoundException('account');
 		}
-
-		if (!account.user.verify === true) {
-			throw new OptionalException(
-				StatusCodes.CONFLICT,
-				'Account is already verified',
-			);
+	  
+		// Sửa: ném khi account đã verify
+		if (account.user.verify === true) {
+		  throw new OptionalException(
+			StatusCodes.CONFLICT,
+			'Account is already verified',
+		  );
 		}
-
+	  
 		const isValidOtp = await this.otpsService.verifyOtp({
-			userId: account.userId,
-			otp: otp,
+		  userId: account.userId,
+		  otp: otp,
 		});
 		if (!isValidOtp) {
-			throw new OptionalException(StatusCodes.BAD_REQUEST, 'Invalid OTP');
+		  throw new OptionalException(StatusCodes.BAD_REQUEST, 'Invalid OTP');
 		}
-
+	  
 		await this.usersRepository.updateUser({
-			userId: account.userId,
-			user: {
-				verify: true,
-			},
+		  userId: account.userId,
+		  user: {
+			verify: true,
+		  },
 		});
-
+	  
 		const accountResponse = new AccountResponseDto(account);
 		accountResponse.verify = true;
-
+	  
 		return {
-			success: true,
-			data: accountResponse,
+		  success: true,
+		  data: accountResponse,
 		};
-	}
+	  }
+	  
 
 	async forgotPassword(
 		forgotPasswordRequestDto: ForgotPasswordRequestDto,

@@ -43,14 +43,17 @@ export class UsersController {
 		return new HttpResponseDto().success<GetUserResponseDto>(result);
 	}
 
-	async getMyInformation(req: Request): Promise<Response> {
+	async getMyInformation(req: Request, res: Response): Promise<Response> {
 		const myInformationDto = req.user as UserInformationDto;
 		const result = await this.usersService.getMyInformation(myInformationDto);
 		if (result instanceof Exception) {
 			return new HttpResponseDto().exception(result);
 		}
-		return new HttpResponseDto().success<GetUserResponseDto>(result);
+		return res
+			.status(200)
+			.json(new HttpResponseDto().success<typeof result.data>(result));
 	}
+
 
 	async updateMyInformation(req: Request): Promise<Response> {
 		const updateMyInformationRequestDto = new UpdateMyInformationRequestDto(
