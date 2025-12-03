@@ -1,33 +1,55 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import cors from "cors";
-import express, { Express } from "express";
-import helmet from "helmet";
-import morgan from "morgan";
+import cors from 'cors';
+import express, { Express } from 'express';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import passport from 'passport';
 
-import { openAPIRouter } from "./swagger";
-import { Modules } from "./modules";
-import { appEnv } from "./configs";
+import { openAPIRouter } from './swagger';
+import { Modules } from './modules';
+import { appEnv } from './configs';
+import {
+	errorHandlerMiddleware,
+	requestContextMiddleware,
+	setCookieMiddleware,
+} from './common';
 
 const app: Express = express();
 
 app.use(express.json());
 
 // Set the application to trust the reverse proxy
-app.set("trust proxy", true);
+app.set('trust proxy', true);
+
+app.use(requestContextMiddleware);
+
+app.use(setCookieMiddleware);
+
+// Passport middleware
+app.use(passport.initialize());
 
 // Middlewares
-app.use(cors({ origin: appEnv.CORS_ORIGIN, credentials: true }));
+// Allow multiple origins: configured origin + common Vite dev hosts
+app.use(
+    cors({
+        origin: [appEnv.CORS_ORIGIN, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+        credentials: true,
+    }),
+);
 app.use(helmet());
-app.use(morgan("combined"));
+app.use(morgan('combined'));
 
+app.use('/health-check', Modules.healthCheckRouter);
+app.use('/auth', Modules.authRouter);
+app.use('/users', Modules.usersRouter);
+app.use('/projects', Modules.projectsRouter);
 
-app.use("/health-check", Modules.healthCheckRouter);
+app.use(errorHandlerMiddleware);
 
 app.use(openAPIRouter);
 
-
 app.listen(appEnv.PORT, () => {
-  const { NODE_ENV, HOST, PORT } = appEnv;
-  console.log(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
+	const { NODE_ENV, HOST, PORT } = appEnv;
+	console.log(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}/api`);
 });

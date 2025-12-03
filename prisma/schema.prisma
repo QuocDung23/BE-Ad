@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator zod {
+    provider                         = "zod-prisma-types"
+    output                           = "../src/models" // default is ./generated/zod
+    useMultipleFiles                 = true // default is false
+    writeBarrelFiles                 = true // default is true
+    createInputTypes                 = true // default is false
+    createModelTypes                 = true // default is false
+    addInputTypeValidation           = true // default is false
+    addIncludeType                   = true // default is false
+    addSelectType                    = true // default is false
+    validateWhereUniqueInput         = true // default is false
+    createOptionalDefaultValuesTypes = true // default is false
+    createRelationValuesTypes        = true // default is false
+    createPartialTypes               = true // default is false
+    useDefaultValidators             = true // default is false
+    coerceDate                       = true // default is false
+    writeNullishInModelTypes         = true // default is false
+    prismaClientPath                 = "./path/to/prisma/client" // default is client output path 
+}
+
+enum UserStatusEnum {
+    ACTIVE @map("active")
+    LOCKED @map("locked")
+}
+enum RoleStatusEnum {
+  ACTIVE @map("active")
+  LOCKED @map("locked")
+}
+enum ProjectStatusEnum {
+    ACTIVE @map("active")
+    LOCKED @map("locker")
+}
+
+model users {
+    id        String         @id @default(uuid())
+    email     String         @unique
+    name      String
+    bio       String?
+    address   String?
+    avatar    String?
+    verify    Boolean        @default(false)
+    // @DtoCreateHidden
+    // @DtoUpdateHidden
+    status    UserStatusEnum @default(ACTIVE)
+    createdAt DateTime       @default(now())
+    // @DtoCreateHidden
+    // @DtoUpdateHidden
+    updatedAt DateTime       @updatedAt
+    // @DtoCreateHidden
+    // @DtoUpdateHidden
+    deletedAt DateTime?
+
+    accounts       accounts?
+    socialAccounts socialAccounts?
+    tokens         tokens[]
+    otps           otps?
+    projectMembers projectMembers[]
+
+    @@map("users")
+    userRoles userRole[]
+}
+
+model accounts {
+    id       String @id @default(uuid())
+    userId   String @unique @map("user_id")
+    user     users  @relation(fields: [userId], references: [id])
+    password String
+    salt     String
+
+    @@map("accounts")
+}
+
+model socialAccounts {
+    id                 String @id @default(uuid())
+    userId             String @unique @map("user_id")
+    user               users  @relation(fields: [userId], references: [id])
+    googleId           String @map("google_id")
+    googleAccessToken  String @map("google_access_token")
+    googleRefreshToken String @map("google_refresh_token")
+
+    @@map("Social_Accounts")
+}
+
+model tokens {
+    id           String @id @default(uuid())
+    userId       String @map("user_id")
+    user         users  @relation(fields: [userId], references: [id])
+    refreshToken String @unique @map("refresh_token")
+
+    @@map("Tokens")
+}
+
+model otps {
+    id        String   @id @default(uuid())
+    userId    String   @unique @map("user_id")
+    user      users    @relation(fields: [userId], references: [id])
+    otp       String   @db.Char(6)
+    expiresAt DateTime @map("expires_at")
+
+    @@map("Otps")
+}
+
+model roles {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  status      RoleStatusEnum @default(ACTIVE)
+  description String?
+  createAt    DateTime       @default(now())
+  updateAt    DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  projectMembers projectMembers[]
+
+  userRoles userRole[]
+}
+
+model permission {
+  id String @id @default(uuid())
+  namePer String @unique
+  desc String
+
+  rolePermission RolePermission[]
+}
+
+model RolePermission {
+  id String @id @default(uuid())
+  roleId String @map("role_id")
+  permissionId String @map("permission_id")
+  permission permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@map("RolePermissions")
+}
+
+model userRole {
+  id String @id @default(uuid())
+  userId String @map("user_id")
+  user users @relation(fields: [userId], references: [id])
+  roleId String @map("role_id")
+  role roles @relation(fields: [roleId], references: [id])
+  isGlobal Boolean @default(true)
+
+  @@unique([userId, roleId])
+  @@map("UserRoles")
+}
+
+model projects {
+  id          String            @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deleteAt    DateTime?
+  status      ProjectStatusEnum @default(ACTIVE)
+
+  lables        lable[]
+  projectMembers projectMembers[]
+
+  @@map("Projects")
+}
+
+model projectMembers {
+  id        String   @id @default(uuid())
+  roleId    String   @map("role_id")
+  role      roles    @relation(fields: [roleId], references: [id])
+  userId    String   @map("user_id")
+  user      users    @relation(fields: [userId], references: [id])
+  projectId String   @map("project_id")
+  project   projects @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, projectId])
+  @@map("ProjectMembers")
+}
+
+model lable {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  project     projects @relation(fields: [projectId], references: [id])
+  projectName String?
+  color       String?
+  name        String?
+
+  @@map("Lable")
+}
+
