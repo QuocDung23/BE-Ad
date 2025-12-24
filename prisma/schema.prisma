@@ -10,11 +10,13 @@ generator client {
 
 datasource db {
     provider = "postgresql"
-    url      = env("DATABASE_URL")
+    // url      = env("DATABASE_URL")
+    // The `url` property is deprecated and should be configured externally.
+    // Move connection URLs to `prisma.config.ts` and configure your client accordingly.
 }
 
 generator zod {
-    provider                         = "zod-prisma-types"
+    provider = "zod-prisma-types"
     output                           = "../src/models" // default is ./generated/zod
     useMultipleFiles                 = true // default is false
     writeBarrelFiles                 = true // default is true
@@ -43,7 +45,7 @@ enum RoleStatusEnum {
 }
 enum ProjectStatusEnum {
     ACTIVE @map("active")
-    LOCKED @map("locker")
+    LOCKED @map("locked")
 }
 
 model users {
@@ -70,9 +72,9 @@ model users {
     tokens         tokens[]
     otps           otps?
     projectMembers projectMembers[]
+    userRoles      userRole[]
 
     @@map("users")
-    userRoles userRole[]
 }
 
 model accounts {
@@ -120,39 +122,40 @@ model roles {
   name        String         @unique
   status      RoleStatusEnum @default(ACTIVE)
   description String?
-  createAt    DateTime       @default(now())
-  updateAt    DateTime       @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   deletedAt   DateTime?
 
-  projectMembers projectMembers[]
-
-  userRoles userRole[]
+  projectMembers   projectMembers[]
+  userRoles        userRole[]
+  rolePermissions  rolePermission[]
 }
 
 model permission {
-  id String @id @default(uuid())
-  namePer String @unique
-  desc String
+  id      String @id @default(uuid())
+  name    String @unique
+  desc    String?
 
-  rolePermission RolePermission[]
+  rolePermissions rolePermission[]
 }
 
-model RolePermission {
-  id String @id @default(uuid())
-  roleId String @map("role_id")
-  permissionId String @map("permission_id")
-  permission permission @relation(fields: [permissionId], references: [id])
+model rolePermission {
+  id            String      @id @default(uuid())
+  roleId        String      @map("role_id")
+  permissionId  String      @map("permission_id")
+  role          roles       @relation(fields: [roleId], references: [id])
+  permission    permission  @relation(fields: [permissionId], references: [id])
 
   @@unique([roleId, permissionId])
   @@map("RolePermissions")
 }
 
 model userRole {
-  id String @id @default(uuid())
-  userId String @map("user_id")
-  user users @relation(fields: [userId], references: [id])
-  roleId String @map("role_id")
-  role roles @relation(fields: [roleId], references: [id])
+  id       String  @id @default(uuid())
+  userId   String  @map("user_id")
+  user     users   @relation(fields: [userId], references: [id])
+  roleId   String  @map("role_id")
+  role     roles   @relation(fields: [roleId], references: [id])
   isGlobal Boolean @default(true)
 
   @@unique([userId, roleId])
@@ -160,15 +163,15 @@ model userRole {
 }
 
 model projects {
-  id          String            @id @default(uuid())
-  title       String
-  description String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  deleteAt    DateTime?
-  status      ProjectStatusEnum @default(ACTIVE)
+  id             String            @id @default(uuid())
+  title          String
+  description    String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+  status         ProjectStatusEnum @default(ACTIVE)
 
-  lables        lable[]
+  labels         label[]
   projectMembers projectMembers[]
 
   @@map("Projects")
@@ -189,7 +192,7 @@ model projectMembers {
   @@map("ProjectMembers")
 }
 
-model lable {
+model label {
   id          String   @id @default(uuid())
   projectId   String   @map("project_id")
   project     projects @relation(fields: [projectId], references: [id])
@@ -197,6 +200,6 @@ model lable {
   color       String?
   name        String?
 
-  @@map("Lable")
+  @@map("labels")
 }
 
